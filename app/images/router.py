@@ -8,7 +8,8 @@ from app.images.crud import get_images, get_latest_image_id, save_image
 from app.database import get_session
 from app.images.models import Image
 from app.images.schema import ImageResponse
-from app.utils import is_valid_image, save_file_to_disk
+from app.shared.detector import detect_face_locations, draw_face_boxes
+from app.shared.utils import is_valid_image, save_file_to_disk
 
 
 router = APIRouter(
@@ -27,15 +28,23 @@ def load_images(session: Session = Depends(get_session)):
 
 @router.post("/")
 def upload_image(file: UploadFile, session: Session = Depends(get_session)):
-    if not is_valid_image(file.file):
+    if not file.content_type or not is_valid_image(file.file):
         return {"error": "Invalid image"}
     
     latest_id = (get_latest_image_id(session) or 0) + 1
-    image_path = os.path.join(STATIC_DIR, str(latest_id))
+    img_type = file.content_type.split("/")[-1]
+    img_name = f"{latest_id}.{img_type}"
+    image_path = os.path.join(STATIC_DIR, img_name)
     content = file.file.read()
+
     if not save_file_to_disk(image_path, content):
         return {"error": "Error while saving file to disk!"}
     
-    image = Image(id=latest_id, image_path=image_path)
+    positions = detect_face_locations(image_path)
+    draw_face_boxes(image_path, positions)
+
+    image = Image(
+        id=latest_id, image_path=image_path, number_of_people=len(positions)
+    )
     save_image(session, image)
     return {"detail": "success"}
