@@ -7,7 +7,12 @@ def detect_face_locations(img_path: str) -> list:
     """
     img: image to detect faces on (numpy array)
     """
-    faces = DeepFace.extract_faces(img_path=img_path, detector_backend='mtcnn')
+    try:
+        faces = DeepFace.extract_faces(img_path=img_path, detector_backend='mtcnn')
+    except ValueError as err:
+        print(f"Cannot detect faces in the image: {err}")
+        faces = []
+
     positions = []
     for face in faces:
         area = face['facial_area']

@@ -9,7 +9,8 @@ load_dotenv()
 POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
 POSTGRES_DB = os.getenv("POSTGRES_DB", "postgres")
-DATABASE_URL = f"postgresql://{POSTGRES_USER}:{quote(POSTGRES_PASSWORD)}@localhost:5432/{POSTGRES_DB}"
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
+DATABASE_URL = f"postgresql://{POSTGRES_USER}:{quote(POSTGRES_PASSWORD)}@{POSTGRES_HOST}:5432/{POSTGRES_DB}"
 
 engine = create_engine(DATABASE_URL, echo=True)
 
